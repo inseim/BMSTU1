@@ -1,0 +1,143 @@
+// Лабораторная работа №3, часть 2. Вариант 13.
+// Базовый класс «сотрудник предприятия», производный класс «начальник подразделения».
+// Два варианта переопределения функций:
+//  1) статический полиморфизм (employee, chief) - функции без virtual,
+//     метод выбирается по типу указателя;
+//  2) динамический полиморфизм (employeeV, chiefV) - функции с virtual в базовом
+//     классе, метод выбирается по типу объекта.
+#include <iostream>
+#include <string>
+#include <vector>
+using namespace std;
+
+// ---------- Статический полиморфизм ----------
+class employee // Базовый класс - "Сотрудник предприятия"
+{
+protected:
+string fio; // ФИО
+double salary; // Оклад
+double bonus; // Надбавка за стаж (в процентах от оклада за 1 год)
+int years; // Стаж (в годах)
+public:
+employee(string fio, double salary, double bonus, int years) // Конструктор для инициализации полей
+{
+this->fio=fio; this->salary=salary; this->bonus=bonus; this->years=years;
+}
+double calc() // Вычисление зарплаты: оклад плюс надбавка за стаж
+{
+return salary+salary*bonus/100*years;
+}
+void print() // Метод для печати параметров сотрудника
+{
+cout<<"employee: fio="<<fio<<" salary="<<salary<<" bonus="<<bonus<<"% years="<<years<<endl;
+}
+};
+class chief: public employee // Производный класс - "Начальник подразделения"
+{
+double dutyBonus; // Процентная надбавка к окладу за выполнение обязанностей начальника
+string dept; // Название подразделения
+public:
+chief(string fio, double salary, double bonus, int years, double dutyBonus, string dept): // Конструктор
+  employee(fio, salary, bonus, years) // Явный вызов конструктора базового класса
+  {
+  this->dutyBonus=dutyBonus; this->dept=dept;
+  }
+  double calc() // Переопределенная функция вычисления зарплаты
+  {
+  return employee::calc()+salary*dutyBonus/100; // Вызов функции базового класса и надбавка начальника
+  }
+  void print() // Переопределенный метод print
+  {
+  employee::print(); // Вызов в переопределенном методе метода базового класса
+  cout<<"  chief: duty bonus="<<dutyBonus<<"% dept="<<dept<<endl; // Допечатывает новые поля
+  }
+};
+
+// ---------- Динамический полиморфизм ----------
+class employeeV // Базовый класс - "Сотрудник предприятия"
+{
+protected:
+string fio; // ФИО
+double salary; // Оклад
+double bonus; // Надбавка за стаж (в процентах от оклада за 1 год)
+int years; // Стаж (в годах)
+public:
+employeeV(string fio, double salary, double bonus, int years) // Конструктор для инициализации полей
+{
+this->fio=fio; this->salary=salary; this->bonus=bonus; this->years=years;
+}
+virtual double calc() // Вычисление зарплаты (виртуальная функция)
+{
+return salary+salary*bonus/100*years;
+}
+virtual void print() // Метод для печати параметров сотрудника (виртуальный)
+{
+cout<<"employee: fio="<<fio<<" salary="<<salary<<" bonus="<<bonus<<"% years="<<years<<endl;
+}
+};
+class chiefV: public employeeV // Производный класс - "Начальник подразделения"
+{
+double dutyBonus; // Процентная надбавка за выполнение обязанностей начальника
+string dept; // Название подразделения
+public:
+chiefV(string fio, double salary, double bonus, int years, double dutyBonus, string dept): // Конструктор
+  employeeV(fio, salary, bonus, years) // Явный вызов конструктора базового класса
+  {
+  this->dutyBonus=dutyBonus; this->dept=dept;
+  }
+  double calc() // Переопределенная виртуальная функция вычисления зарплаты
+  {
+  return employeeV::calc()+salary*dutyBonus/100; // Вызов функции базового класса и надбавка начальника
+  }
+  void print() // Переопределенный метод print
+  {
+  employeeV::print(); // Вызов метода базового класса
+  cout<<"  chief: duty bonus="<<dutyBonus<<"% dept="<<dept<<endl; // Допечатывает новые поля
+  }
+};
+
+int main()
+{
+cout<<"1. Static polymorphism (no virtual)"<<endl;
+employee e("Ivanov", 1000, 2, 5); // Создается объект базового класса с вызовом конструктора
+chief c("Petrov", 2000, 1, 10, 20, "IT"); // Создается объект производного класса
+e.print(); // Вызов метода через объект
+cout<<"  pay="<<e.calc()<<endl;
+c.print(); // Вызов метода через объект
+cout<<"  pay="<<c.calc()<<endl;
+employee *p; // Указатель типа базового класса
+p=&e; // Настраиваем на объект базового класса
+p->print(); // Вызов метода через указатель
+p=&c; // Настраиваем указатель на объект производного класса
+      // (преобразование типа допустимо)
+p->print(); // Вызывается метод класса employee: выбор по типу указателя
+cout<<"  p->calc()="<<p->calc()<<" (without chief bonus)"<<endl<<endl; // Тоже функция базового класса
+
+cout<<"2. Dynamic polymorphism (virtual)"<<endl;
+employeeV ev("Ivanov", 1000, 2, 5); // Объект базового класса
+chiefV cv("Petrov", 2000, 1, 10, 20, "IT"); // Объект производного класса
+employeeV *pv; // Указатель типа базового класса
+pv=&ev; // Настраиваем на объект базового класса
+pv->print(); // Вызывается метод класса employeeV
+pv=&cv; // Настраиваем на объект производного класса
+pv->print(); // Вызывается метод класса chiefV: выбор по типу объекта
+cout<<"  pv->calc()="<<pv->calc()<<" (with chief bonus)"<<endl<<endl; // Вызывается функция chiefV
+
+cout<<"3. Vector of pointers to objects of base and derived classes"<<endl;
+employeeV e1("Ivanov", 1000, 2, 5), e2("Sidorov", 1500, 3, 4); // Объекты базового класса
+chiefV c1("Petrov", 2000, 1, 10, 20, "IT"), c2("Kozlov", 3000, 2, 8, 15, "Sales"); // Объекты производного класса
+vector<employeeV*> v; // Вектор указателей на объекты базового класса
+v.push_back(&e1); // В одном векторе указатели
+v.push_back(&c1); // на объекты базового
+v.push_back(&e2); // и производного
+v.push_back(&c2); // классов
+double sum=0; // Сумма зарплат
+for (int i = 0; i < v.size(); i++) // Перебираем все указатели вектора
+{
+v[i]->print(); // Печатаем данные объекта (динамический полиморфизм)
+cout<<"  pay="<<v[i]->calc()<<endl; // Зарплата (для каждого объекта вызывается своя функция)
+sum+=v[i]->calc();
+}
+cout<<"Sum of salaries = "<<sum<<endl; // Вывод суммы
+return 0;
+}
